@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Конструктор промтов для рабочих листов</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/manrope@5.0.20/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/manrope@5.0.20/700.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/manrope@5.0.20/800.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.20/index.css">
+<style>
+/* ================= БАЗА ================= */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#eef7f1; --card:#ffffff; --ink:#132a1c; --muted:#5d7468;
+  --brand:#15a34a; --brand-d:#0f6b36; --brand-l:#e6f7ec; --brand-ll:#f3fbf5;
+  --teal:#0d9488; --mint:#10b981; --lime:#84cc16;
+  --ok:#15803d; --ok-l:#dcfce7; --warn:#b45309; --warn-l:#fef3e2;
+  --err:#b91c1c; --err-l:#fdecec;
+  --line:#dcebe1; --line-h:#a9d8bc; --radius:20px;
+  --sh-s:0 1px 2px rgba(15,60,32,.05),0 4px 14px rgba(15,60,32,.05);
+  --sh:0 2px 6px rgba(15,60,32,.05),0 14px 34px rgba(15,60,32,.08);
+  --sh-lg:0 4px 10px rgba(15,60,32,.06),0 24px 56px rgba(15,60,32,.16);
+  --nav-h:56px;
+}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  font-family:'Manrope',system-ui,-apple-system,"Segoe UI",sans-serif;
+  background:
+    radial-gradient(1100px 520px at 100% -8%, #cdeeda 0%, rgba(205,238,218,0) 62%),
+    radial-gradient(900px 420px at -8% 6%, #cdeee7 0%, rgba(205,238,231,0) 58%),
+    var(--bg);
+  color:var(--ink); line-height:1.5; min-height:100vh; padding-bottom:70px;
+  overflow-wrap:break-word;
+}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer}
+h1,h2,h3,h4{text-wrap:balance}
+p,small,span{text-wrap:pretty}
+::selection{background:#a7e8c1;color:#0c3320}
+:focus-visible{outline:3px solid #7ed6a4;outline-offset:2px}
+
+/* ================= ШАПКА ================= */
+.topbar{
+  position:relative; overflow:hidden;
+  background:linear-gradient(118deg,#0f4d2a 0%,#15803d 42%,#17a86a 78%,#3ddc9a 100%);
+  color:#fff; padding:24px 26px 28px; box-shadow:0 12px 34px rgba(15,77,42,.3);
+}
+.topbar::before{
+  content:"";position:absolute;inset:0;
+  background-image:radial-gradient(rgba(255,255,255,.16) 1.5px,transparent 1.6px);
+  background-size:20px 20px;opacity:.75;pointer-events:none;
+}
+.topbar::after{
+  content:"";position:absolute;width:420px;height:420px;right:-120px;top:-200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.22),transparent 68%);pointer-events:none;
+}
+.topbar-inner{max-width:1440px;margin:0 auto;position:relative;z-index:2;display:flex;gap:18px 22px;align-items:center;flex-wrap:wrap}
+.brand{display:flex;gap:15px;align-items:center;flex:1 1 340px;min-width:0}
+.brand-mark{
+  width:58px;height:58px;border-radius:19px;background:rgba(255,255,255,.2);flex:none;
+  display:grid;place-items:center;border:1px solid rgba(255,255,255,.36);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4)
+}
+.brand-txt{min-width:0}
+.brand h1{font-size:clamp(18px,2.3vw,25px);font-weight:800;letter-spacing:-.5px;line-height:1.2}
+.brand p{font-size:13px;opacity:.92;font-weight:600;margin-top:4px;max-width:56ch}
+.top-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.gbtn{
+  border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.16);color:#fff;
+  padding:10px 15px;border-radius:13px;font-weight:800;font-size:13px;line-height:1.2;
+  transition:.18s;display:inline-flex;gap:7px;align-items:center;justify-content:center;
+  max-width:100%;white-space:normal;text-align:left;min-height:42px
+}
+.gbtn:hover{background:rgba(255,255,255,.3);transform:translateY(-1px)}
+.gbtn:active{transform:translateY(0)}
+.gbtn.solid{background:#fff;color:var(--brand-d);border-color:#fff}
+.gbtn.solid:hover{background:#eafaf0}
+.prog-wrap{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.34);padding:9px 15px;border-radius:999px;font-size:12.5px;font-weight:800;white-space:nowrap}
+.prog-bar{width:88px;height:7px;border-radius:99px;background:rgba(255,255,255,.32);overflow:hidden;flex:none}
+.prog-fill{height:100%;width:0;background:linear-gradient(90deg,#d9f99d,#fde68a);border-radius:99px;transition:width .45s cubic-bezier(.2,.8,.3,1)}
+
+/* ================= БЫСТРАЯ НАВИГАЦИЯ ================= */
+.qnav{
+  position:sticky;top:0;z-index:50;background:rgba(248,253,249,.9);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);box-shadow:0 6px 18px rgba(15,60,32,.06)
+}
+.qnav-in{max-width:1440px;margin:0 auto;padding:9px 20px;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x proximity}
+.qnav-in::-webkit-scrollbar{display:none}
+.qn{
+  display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:999px;
+  border:1.5px solid var(--line);background:#fff;color:var(--muted);font-weight:800;font-size:12.5px;
+  text-decoration:none;white-space:nowrap;transition:.16s;scroll-snap-align:start;min-height:36px
+}
+.qn b{width:19px;height:19px;border-radius:6px;background:var(--brand-l);color:var(--brand-d);display:grid;place-items:center;font-size:11px;flex:none}
+.qn:hover{border-color:var(--line-h);color:var(--ink);transform:translateY(-1px)}
+.qn.active{background:linear-gradient(135deg,var(--brand),var(--teal));border-color:transparent;color:#fff;box-shadow:0 6px 14px rgba(21,163,74,.3)}
+.qn.active b{background:rgba(255,255,255,.24);color:#fff}
+
+/* ================= РАСКЛАДКА ================= */
+.layout{max-width:1440px;margin:20px auto 0;padding:0 20px;display:grid;grid-template-columns:minmax(0,1fr) minmax(390px,530px);gap:22px;align-items:start}
+.builder{display:flex;flex-direction:column;gap:16px;min-width:0}
+section.card{scroll-margin-top:calc(var(--nav-h) + 14px)}
+
+/* ================= КАРТОЧКИ ================= */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--sh-s);overflow:hidden;transition:box-shadow .2s}
+.card:hover{box-shadow:var(--sh)}
+.card-head{display:flex;gap:13px;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#fcfffd,#f2f9f5);position:relative}
+.card-head::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--brand),var(--teal))}
+.step-n{
+  width:36px;height:36px;flex:none;border-radius:12px;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--brand),var(--teal));color:#fff;font-weight:800;font-size:14px;
+  box-shadow:0 6px 14px rgba(21,163,74,.34),inset 0 1px 0 rgba(255,255,255,.35)
+}
+.head-txt{min-width:0;flex:1}
+.card-head h2{font-size:16px;font-weight:800;letter-spacing:-.3px;line-height:1.3}
+.card-head .sub{font-size:12.2px;color:var(--muted);font-weight:600;margin-top:2px;line-height:1.4}
+.head-extra{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.done{width:24px;height:24px;border-radius:50%;display:none;place-items:center;background:var(--ok-l);color:var(--ok);font-size:12px;font-weight:800;border:1.5px solid #a9e0bd;flex:none}
+.done.on{display:grid}
+.card-body{padding:18px}
+
+/* ================= ФОРМЫ ================= */
+.field{margin-bottom:15px;min-width:0}
+.field:last-child{margin-bottom:0}
+.label{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px}
+.hint{font-size:11.8px;color:var(--muted);margin-top:7px;font-weight:600;line-height:1.45}
+input[type=text],input[type=number],select,textarea{
+  width:100%;min-width:0;padding:11px 13px;border:1.5px solid var(--line);border-radius:13px;background:#fbfefc;
+  font-weight:600;font-size:14px;transition:border-color .16s,box-shadow .16s,background .16s;outline:none;
+  appearance:none;-webkit-appearance:none
+}
+select{
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5L6 6.5L11 1.5' stroke='%235d7468' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat:no-repeat;background-position:right 13px center;padding-right:34px;cursor:pointer
+}
+input[type=number]{-moz-appearance:textfield}
+textarea{resize:vertical;min-height:96px;line-height:1.6;font-weight:500}
+input[type=text]:hover,select:hover,textarea:hover{border-color:var(--line-h)}
+input[type=text]:focus,input[type=number]:focus,select:focus,textarea:focus{
+  border-color:var(--brand);background:#fff;box-shadow:0 0 0 4px rgba(21,163,74,.13)
+}
+input[readonly]{background:#f1f7f3;color:var(--muted);cursor:default}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.grid2 > *,.grid3 > *{min-width:0}
+
+/* ================= ЧИПСЫ ================= */
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
+.chip span{
+  display:inline-flex;align-items:center;justify-content:center;min-width:44px;padding:9px 11px;
+  border:1.5px solid var(--line);border-radius:12px;background:#fbfefc;font-weight:800;font-size:13.5px;
+  cursor:pointer;transition:.16s;user-select:none;color:var(--ink);white-space:nowrap;line-height:1.1
+}
+.chip span:hover{border-color:var(--line-h);background:var(--brand-ll)}
+.chip input:checked + span{background:linear-gradient(135deg,var(--brand),var(--teal));color:#fff;border-color:transparent;box-shadow:0 6px 14px rgba(21,163,74,.32)}
+
+/* ================= РАДИО-КАРТОЧКИ ================= */
+.opts{display:grid;gap:9px}
+.opts.cols2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.opt{position:relative;min-width:0}
+.opt input{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
+.opt > span{
+  display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border:1.5px solid var(--line);
+  border-radius:14px;background:#fbfefc;cursor:pointer;transition:.16s;font-weight:700;font-size:13.2px;line-height:1.4;height:100%
+}
+.opt > span > span:last-child{min-width:0;flex:1}
+.opt .dot{width:18px;height:18px;flex:none;border-radius:50%;border:2px solid #c2d8ca;margin-top:1px;transition:.16s}
+.opt small{display:block;font-weight:600;color:var(--muted);font-size:11.6px;margin-top:3px;line-height:1.4}
+.opt > span:hover{border-color:var(--line-h);background:var(--brand-ll)}
+.opt input:checked + span{border-color:var(--brand);background:var(--brand-l);box-shadow:0 0 0 3px rgba(21,163,74,.1)}
+.opt input:checked + span .dot{border-color:var(--brand);background:radial-gradient(circle,var(--brand) 0 5px,#fff 5.5px)}
+
+/* ================= ЧЕКБОКСЫ ================= */
+.types{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:9px}
+.chk{position:relative;min-width:0}
+.chk input{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
+.chk > span{
+  display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border:1.5px solid var(--line);border-radius:14px;
+  background:#fbfefc;cursor:pointer;transition:.16s;font-weight:700;font-size:13px;line-height:1.4;height:100%;
+  overflow-wrap:anywhere
+}
+.chk .box{
+  width:20px;height:20px;flex:none;border-radius:7px;border:2px solid #c2d8cb;background:#fff;
+  display:grid;place-items:center;transition:.16s;margin-top:0
+}
+.chk .box svg{opacity:0;transform:scale(.4);transition:.16s}
+.chk .emo{font-size:15px;line-height:1.2;flex:none}
+.chk .tx{min-width:0;flex:1}
+.chk .tx small{display:block;font-weight:600;color:var(--muted);font-size:11.4px;margin-top:3px;line-height:1.4}
+.chk > span:hover{border-color:var(--line-h);background:var(--brand-ll);transform:translateY(-1px)}
+.chk input:checked + span{border-color:var(--brand);background:var(--brand-l)}
+.chk input:checked + span .box{background:linear-gradient(135deg,var(--brand),var(--teal));border-color:transparent}
+.chk input:checked + span .box svg{opacity:1;transform:scale(1)}
+
+.counter{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;font-size:12px;font-weight:800;background:var(--brand-l);color:var(--brand-d);border:1.5px solid #cdeada;max-width:100%;line-height:1.2}
+.pill.warn{background:var(--warn-l);color:var(--warn);border-color:#f3ddb8}
+.pill.ok{background:var(--ok-l);color:var(--ok);border-color:#a9e0bd}
+.linkbtn{background:none;border:none;color:var(--brand);font-weight:800;font-size:12.2px;padding:6px 8px;border-radius:8px;transition:.16s;line-height:1.2}
+.linkbtn:hover{background:var(--brand-l);color:var(--brand-d);text-decoration:underline}
+
+/* ================= ГРУППЫ ================= */
+.group{border:1.5px dashed var(--line-h);border-radius:16px;padding:14px;background:var(--brand-ll);margin-bottom:12px}
+.group:last-child{margin-bottom:0}
+.group h4{font-size:12.8px;font-weight:800;margin-bottom:11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#1c4630}
+.mini-pill{font-size:10.8px;background:#fff;border:1.5px solid var(--line);color:var(--muted);padding:3px 9px;border-radius:999px;font-weight:800;white-space:nowrap}
+.mini{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:8px}
+.mini .chk > span{padding:10px 12px;font-size:12.6px;font-weight:600;background:#fff}
+
+/* ================= ТУМБЛЕР ================= */
+.switch{display:flex;align-items:center;gap:12px;padding:12px 13px;border:1.5px solid var(--line);border-radius:14px;background:#fbfefc;cursor:pointer;transition:.16s;margin-bottom:9px;position:relative}
+.switch:last-child{margin-bottom:0}
+.switch:hover{border-color:var(--line-h);background:var(--brand-ll)}
+.switch input{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
+.switch .track{width:42px;height:24px;border-radius:99px;background:#d2e2d8;position:relative;flex:none;transition:.22s}
+.switch .track::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.22s;box-shadow:0 2px 5px rgba(0,0,0,.22)}
+.switch input:checked + .track{background:linear-gradient(135deg,var(--mint),var(--teal))}
+.switch input:checked + .track::after{transform:translateX(18px)}
+.switch .txt{font-weight:800;font-size:13.2px;min-width:0;line-height:1.35}
+.switch .txt small{display:block;font-weight:600;color:var(--muted);font-size:11.8px;margin-top:3px;line-height:1.4}
+.switch:has(input:checked){border-color:#9fdcbc;background:#f1fbf5}
+
+/* ================= КНОПКИ-ДОПОЛНЕНИЯ ================= */
+.addons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.addon{
+  border:2px dashed #a9d8bc;border-radius:17px;padding:15px;background:linear-gradient(180deg,#f9fdfa,#eef9f2);
+  text-align:left;transition:.2s;display:flex;gap:12px;align-items:center;min-width:0;flex-wrap:wrap
+}
+.addon:hover{border-color:var(--brand);transform:translateY(-2px);box-shadow:var(--sh)}
+.addon .ic{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;flex:none;font-size:21px;background:#fff;box-shadow:0 5px 14px rgba(21,163,74,.18)}
+.addon .txt-wrap{min-width:0;flex:1 1 150px}
+.addon b{display:block;font-size:13.6px;font-weight:800;line-height:1.3}
+.addon small{display:block;font-size:11.8px;color:var(--muted);font-weight:600;margin-top:3px;line-height:1.4}
+.addon .state{font-size:10.8px;font-weight:800;padding:5px 11px;border-radius:999px;background:#fff;border:1.5px solid var(--line);color:var(--muted);white-space:nowrap;flex:none}
+.addon.on{border-style:solid;border-color:var(--brand);background:linear-gradient(180deg,#eef9f2,#dff2e6)}
+.addon.on .state{background:linear-gradient(135deg,var(--brand),var(--teal));color:#fff;border-color:transparent}
+
+.reveal{display:none;animation:fade .35s ease}
+.reveal.show{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* ================= СКРИНШОТЫ ================= */
+.drop{
+  border:2px dashed #a9d8bc;border-radius:16px;padding:22px 16px;text-align:center;background:var(--brand-ll);
+  cursor:pointer;transition:.18s;font-weight:800;font-size:13.4px;color:var(--brand-d);line-height:1.4
+}
+.drop:hover,.drop.over{background:#e7f6ec;border-color:var(--brand);transform:translateY(-1px)}
+.drop small{display:block;color:var(--muted);font-weight:600;font-size:11.8px;margin-top:6px;line-height:1.45}
+.shots{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.shot{position:relative;width:102px;height:102px;border-radius:14px;overflow:hidden;border:1.5px solid var(--line);background:#fff;box-shadow:var(--sh-s);flex:none}
+.shot img{width:100%;height:100%;object-fit:cover;display:block}
+.shot .rm{position:absolute;top:5px;right:5px;width:24px;height:24px;border-radius:50%;border:none;background:rgba(12,42,24,.78);color:#fff;font-size:12px;line-height:1;display:grid;place-items:center;transition:.16s}
+.shot .rm:hover{background:#b91c1c;transform:scale(1.08)}
+.shot .nm{position:absolute;left:0;right:0;bottom:0;background:rgba(255,255,255,.94);font-size:9.4px;font-weight:800;padding:3px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ================= ПАНЕЛЬ ПРОМТА ================= */
+.preview{position:sticky;top:calc(var(--nav-h) + 14px);background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--sh-lg);overflow:hidden;max-height:calc(100vh - var(--nav-h) - 32px);display:flex;flex-direction:column}
+.pv-head{padding:14px 14px 0;background:linear-gradient(180deg,#10281a,#1a4029);color:#fff;flex:none}
+.pv-title{display:flex;align-items:center;gap:9px;font-size:12.4px;font-weight:800;margin-bottom:12px;line-height:1.3;letter-spacing:.2px}
+.pv-title .live{width:8px;height:8px;border-radius:50%;background:#5ee6a8;flex:none;box-shadow:0 0 0 4px rgba(94,230,168,.22);animation:pulse 2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 8px rgba(94,230,168,.05)}}
+.pv-title .tt{min-width:0;flex:1}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;position:relative;padding-bottom:0}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  border:none;background:rgba(255,255,255,.1);color:#c6ddce;padding:10px 12px;border-radius:12px 12px 0 0;
+  font-weight:800;font-size:12px;white-space:nowrap;transition:.16s;flex:none;display:inline-flex;align-items:center;gap:5px;min-height:38px
+}
+.tab:hover{background:rgba(255,255,255,.2);color:#fff}
+.tab.active{background:#fff;color:var(--brand-d)}
+.tab .lock{opacity:.55;font-size:11px}
+.pv-body{padding:0;background:#fff;flex:1;min-height:0;overflow:auto}
+#output{
+  font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12.2px;line-height:1.7;white-space:pre-wrap;
+  overflow-wrap:anywhere;word-break:break-word;padding:18px;color:#1d3526;min-height:300px;
+  background-image:repeating-linear-gradient(180deg,transparent,transparent 24px,rgba(21,163,74,.055) 24px,rgba(21,163,74,.055) 25px)
+}
+.off-note{padding:38px 22px;text-align:center;color:var(--muted);font-size:13.2px;line-height:1.55}
+.off-note .em{font-size:36px;display:block;margin-bottom:12px}
+.off-note b{display:block;color:var(--ink);font-size:14.6px;margin-bottom:7px}
+.off-note button{margin-top:16px;background:linear-gradient(135deg,var(--brand),var(--teal));color:#fff;border:none;padding:11px 18px;border-radius:12px;font-weight:800;font-size:13px;box-shadow:0 8px 18px rgba(21,163,74,.3);min-height:42px}
+.pv-foot{padding:11px 12px;border-top:1px solid var(--line);background:#f7fcf9;display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex:none}
+.pv-foot .chars{font-size:11.4px;color:var(--muted);font-weight:800;margin-left:auto;white-space:nowrap}
+.btn{
+  border:1.5px solid var(--line);background:#fff;padding:10px 14px;border-radius:12px;font-weight:800;font-size:12.6px;
+  transition:.16s;display:inline-flex;align-items:center;justify-content:center;gap:7px;line-height:1.2;min-height:42px;
+  white-space:nowrap;max-width:100%
+}
+.btn:hover{border-color:var(--brand);color:var(--brand-d);transform:translateY(-1px);box-shadow:var(--sh-s)}
+.btn.primary{background:linear-gradient(135deg,var(--brand),var(--teal));color:#fff;border-color:transparent;box-shadow:0 7px 18px rgba(21,163,74,.32)}
+.btn.primary:hover{filter:brightness(1.08);color:#fff}
+.btn.ghost{background:transparent}
+
+.fab{
+  display:none;position:fixed;right:16px;bottom:16px;z-index:60;
+  background:linear-gradient(135deg,var(--brand),var(--teal));color:#fff;border:none;
+  padding:14px 20px;border-radius:999px;font-weight:800;font-size:14px;
+  box-shadow:0 12px 30px rgba(21,163,74,.45);gap:8px;align-items:center;min-height:50px
+}
+.pv-close{display:none}
+
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,90px);background:#10281a;color:#fff;
+  padding:13px 20px;border-radius:14px;font-weight:800;font-size:13.2px;z-index:200;opacity:0;max-width:calc(100vw - 32px);
+  text-align:center;line-height:1.4;transition:.32s cubic-bezier(.2,.9,.3,1.3);box-shadow:0 16px 36px rgba(0,0,0,.32);pointer-events:none
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+footer{max-width:1440px;margin:26px auto 0;padding:0 20px;color:var(--muted);font-size:12.2px;font-weight:600;text-align:center;line-height:1.6}
+
+@media(max-width:1100px){
+  .layout{grid-template-columns:1fr}
+  .preview{
+    position:fixed;inset:auto 0 0 0;top:auto;max-height:93vh;border-radius:24px 24px 0 0;z-index:80;
+    transform:translateY(106%);transition:transform .34s cubic-bezier(.2,.8,.3,1);width:100%
+  }
+  .preview.open{transform:none}
+  .fab{display:inline-flex}
+  .pv-close{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:10px;border:1px solid rgba(255,255,255,.34);background:rgba(255,255,255,.16);color:#fff;flex:none}
+}
+@media(max-width:680px){
+  :root{--nav-h:52px}
+  .grid2,.grid3,.opts.cols2,.addons{grid-template-columns:minmax(0,1fr)}
+  .topbar{padding:20px 16px 22px}
+  .topbar-inner{gap:14px}
+  .layout{padding:0 12px;margin-top:14px;gap:13px}
+  .card-body{padding:15px 14px 17px}
+  .card-head{padding:14px;gap:11px}
+  .qnav-in{padding:8px 12px}
+  .brand-mark{width:48px;height:48px;border-radius:16px}
+  .top-actions{width:100%}
+  .top-actions .gbtn{flex:1 1 auto;justify-content:center}
+  .pv-foot .chars{width:100%;margin-left:0;text-align:right;order:9}
+  .pv-foot .btn{flex:1 1 auto}
+  .mini{grid-template-columns:minmax(0,1fr)}
+  .types{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg width="31" height="31" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <rect x="4" y="3" width="19" height="25" rx="3.5" fill="#fff" opacity=".96"/>
+          <path d="M8.5 9.5h10M8.5 13.5h10M8.5 17.5h6" stroke="#15a34a" stroke-width="1.9" stroke-linecap="round"/>
+          <rect x="16" y="15" width="12" height="14" rx="3.5" fill="#7cf2c4"/>
+          <path d="M19 22.2l2.1 2.1 4-4.3" stroke="#0f5132" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="brand-txt">
+        <h1>Конструктор промтов для рабочих листов</h1>
+        <p>Предмет · класс · тема → готовый промт для DeepSeek, Qwen, YandexGPT, GigaChat</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="prog-wrap" title="Готовность промта">
+        <span id="progTxt">0%</span>
+        <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+      </div>
+      <button class="gbtn" id="btnExample" type="button">✨ Заполнить примером</button>
+      <button class="gbtn solid" id="btnReset" type="button">↺ Сбросить</button>
+    </div>
+  </div>
+</header>
+
+<nav class="qnav" aria-label="Быстрый переход по шагам">
+  <div class="qnav-in" id="qnav">
+    <a class="qn active" href="#s1" data-t="s1"><b>1</b> Основное</a>
+    <a class="qn" href="#s2" data-t="s2"><b>2</b> Параметры</a>
+    <a class="qn" href="#s3" data-t="s3"><b>3</b> Типы заданий</a>
+    <a class="qn" href="#s4" data-t="s4"><b>4</b> Оформление</a>
+    <a class="qn" href="#s5" data-t="s5"><b>5</b> Доп. требования</a>
+    <a class="qn" href="#s6" data-t="s6"><b>6</b> Свои задания</a>
+    <a class="qn" href="#s7" data-t="s7"><b>7</b> Промты</a>
+  </div>
+</nav>
+
+<div class="layout">
+  <div class="builder">
+
+    <!-- ШАГ 1 -->
+    <section class="card" id="s1">
+      <div class="card-head">
+        <div class="step-n">1</div>
+        <div class="head-txt"><h2>Основное</h2><div class="sub">Предмет, класс, тема и цель рабочего листа</div></div>
+        <div class="head-extra"><span class="done" id="d1">✓</span></div>
+      </div>
+      <div class="card-body">
+        <div class="grid2">
+          <div class="field">
+            <label class="label" for="subject">Предмет</label>
+            <select id="subject"></select>
+            <input type="text" id="subjectCustom" placeholder="Впишите свой предмет…" style="display:none;margin-top:9px" aria-label="Свой предмет">
+          </div>
+          <div class="field">
+            <span class="label">Класс</span>
+            <div class="chips" id="gradeChips"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label class="label" for="topic">Тема урока</label>
+          <input type="text" id="topic" placeholder="Например: Части речи / Решение уравнений / Строение клетки">
+          <div class="hint">Тема попадёт в заголовок рабочего листа и во все промты.</div>
+        </div>
+        <div class="field">
+          <span class="label">Цель рабочего листа</span>
+          <div class="opts" id="goalOpts"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ШАГ 2 -->
+    <section class="card" id="s2">
+      <div class="card-head">
+        <div class="step-n">2</div>
+        <div class="head-txt"><h2>Параметры</h2><div class="sub">Объём, время, сложность и порядок заданий</div></div>
+        <div class="head-extra"><span class="done" id="d2">✓</span></div>
+      </div>
+      <div class="card-body">
+        <div class="grid3">
+          <div class="field">
+            <label class="label" for="tasksCount">Количество заданий</label>
+            <input type="number" id="tasksCount" min="1" max="20" value="5">
+          </div>
+          <div class="field">
+            <label class="label" for="timeMin">Время, минут</label>
+            <input type="number" id="timeMin" min="5" max="90" value="15">
+          </div>
+          <div class="field">
+            <label class="label" for="ageOut">Возраст (авто)</label>
+            <input type="text" id="ageOut" readonly tabindex="-1">
+          </div>
+        </div>
+        <div class="field">
+          <span class="label">Сложность</span>
+          <div class="opts cols2" id="diffOpts"></div>
+        </div>
+        <div class="field">
+          <span class="label">Порядок заданий</span>
+          <div class="opts cols2" id="orderOpts"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ШАГ 3 -->
+    <section class="card" id="s3">
+      <div class="card-head">
+        <div class="step-n">3</div>
+        <div class="head-txt"><h2>Типы заданий</h2><div class="sub">Отметьте нужные — не менее 4 разных типов</div></div>
+        <div class="head-extra">
+          <button class="linkbtn" id="selAllTypes" type="button">выбрать все</button>
+          <button class="linkbtn" id="clrTypes" type="button">очистить</button>
+          <span class="done" id="d3">✓</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="counter">
+          <span class="pill" id="typeCount">Выбрано: 0</span>
+          <span class="pill warn" id="typeWarn">⚠ Нужно минимум 4 типа</span>
+          <button class="linkbtn" id="btnRecomend" type="button">🎯 Подобрать автоматически</button>
+        </div>
+        <div class="types" id="typeList"></div>
+      </div>
+    </section>
+
+    <!-- ШАГ 4 -->
+    <section class="card" id="s4">
+      <div class="card-head">
+        <div class="step-n">4</div>
+        <div class="head-txt"><h2>Оформление листа</h2><div class="sub">Что должно быть в начале, в заданиях и в конце</div></div>
+        <div class="head-extra">
+          <button class="linkbtn" id="btnAllFormat" type="button">вкл. всё</button>
+          <span class="done" id="d4">✓</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="group">
+          <h4>📄 В начале рабочего листа</h4>
+          <div class="mini" id="fmtStart"></div>
+        </div>
+        <div class="group">
+          <h4>✏️ Каждое задание должно иметь</h4>
+          <div class="mini" id="fmtTask"></div>
+        </div>
+        <div class="group">
+          <h4>🎯 Задания должны быть</h4>
+          <div class="mini" id="fmtReq"></div>
+          <div class="field" style="margin-top:12px;margin-bottom:0">
+            <label class="label" for="levels">Уровни сложности</label>
+            <select id="levels">
+              <option>базовые</option><option>повышенные</option><option>творческие</option>
+              <option selected>базовые / повышенные / творческие</option>
+            </select>
+          </div>
+        </div>
+        <div class="group">
+          <h4>🏁 В конце рабочего листа</h4>
+          <div class="mini" id="fmtEnd"></div>
+          <div class="field" style="margin-top:12px;margin-bottom:0">
+            <label class="label" for="reflectQ">Вопросы для рефлексии</label>
+            <input type="text" id="reflectQ" value="Что было самым сложным? / Что было самым интересным? / Что нового я узнал?">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ШАГ 5 -->
+    <section class="card" id="s5">
+      <div class="card-head">
+        <div class="step-n">5</div>
+        <div class="head-txt"><h2>Дополнительные требования</h2><div class="sub">Язык, примеры, объём, ФГОС</div></div>
+        <div class="head-extra"><span class="done" id="d5">✓</span></div>
+      </div>
+      <div class="card-body" id="extraList"></div>
+    </section>
+
+    <!-- ШАГ 6 -->
+    <section class="card" id="s6">
+      <div class="card-head">
+        <div class="step-n">6</div>
+        <div class="head-txt"><h2>Свои задания и скриншоты</h2><div class="sub">Необязательно: вставьте готовые задания или приложите скриншоты к диалогу</div></div>
+        <div class="head-extra"><span class="done" id="d6">✓</span></div>
+      </div>
+      <div class="card-body">
+        <label class="switch">
+          <input type="checkbox" id="ownOn"><span class="track"></span>
+          <span class="txt">Добавить в промт мои задания<small>ИИ будет опираться на ваш список, а не придумывать с нуля</small></span>
+        </label>
+        <div id="ownBox" style="display:none;margin-top:12px">
+          <div class="field" style="margin-bottom:0">
+            <label class="label" for="ownTasks">Мои задания (по одному в строке)</label>
+            <textarea id="ownTasks" placeholder="1. Вставь пропущенное слово: …&#10;2. Установи соответствие: …&#10;3. Реши кейс: …"></textarea>
+          </div>
+        </div>
+
+        <label class="switch" style="margin-top:12px">
+          <input type="checkbox" id="shotOn"><span class="track"></span>
+          <span class="txt">Прикрепить скриншоты заданий к диалогу<small>В промт добавится указание использовать изображения как источник</small></span>
+        </label>
+        <div id="shotBox" style="display:none;margin-top:12px">
+          <div class="drop" id="drop" role="button" tabindex="0">
+            📎 Нажмите или перетащите скриншоты сюда
+            <small>PNG, JPG — до 8 штук. Файлы остаются в браузере и никуда не загружаются.</small>
+          </div>
+          <input type="file" id="fileInput" accept="image/*" multiple hidden>
+          <div class="shots" id="shots"></div>
+          <div class="hint" id="shotHint"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ШАГ 7 -->
+    <section class="card" id="s7">
+      <div class="card-head">
+        <div class="step-n">7</div>
+        <div class="head-txt"><h2>Дополнительные промты</h2><div class="sub">Иллюстрация для листа и интерактивный HTML-лист</div></div>
+        <div class="head-extra"><span class="done" id="d7">✓</span></div>
+      </div>
+      <div class="card-body">
+        <div class="addons">
+          <button class="addon" id="addonImg" type="button">
+            <span class="ic">🎨</span>
+            <span class="txt-wrap"><b>Промт для персонажа / иллюстрации</b><small>Персонаж, декор или инфографика (Промт №2)</small></span>
+            <span class="state">выкл</span>
+          </button>
+          <button class="addon" id="addonHtml" type="button">
+            <span class="ic">💻</span>
+            <span class="txt-wrap"><b>Промт для интерактивного листа</b><small>HTML + JS: механики, кнопки, игровые элементы (Промт №3)</small></span>
+            <span class="state">выкл</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ИЛЛЮСТРАЦИЯ -->
+    <section class="card reveal" id="imgCard">
+      <div class="card-head" style="background:linear-gradient(180deg,#f4fbf3,#fff)">
+        <div class="step-n" style="background:linear-gradient(135deg,#65a30d,#84cc16);box-shadow:0 6px 14px rgba(101,163,13,.32)">🎨</div>
+        <div class="head-txt"><h2>Промт для изображения</h2><div class="sub">Для Qwen, Kandinsky, Шедеврум, Nano Banana</div></div>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <span class="label">Что генерируем</span>
+          <div class="opts cols2" id="imgKind"></div>
+        </div>
+
+        <div id="imgChar">
+          <div class="field">
+            <label class="label" for="imgObject">Центральный объект</label>
+            <input type="text" id="imgObject" placeholder="Например: русалочка с книгой в подводном мире">
+          </div>
+          <div class="grid2">
+            <div class="field">
+              <label class="label" for="imgChars">Персонажи</label>
+              <textarea id="imgChars" style="min-height:88px" placeholder="Кто изображён, сколько, как выглядят, что делают"></textarea>
+            </div>
+            <div class="field">
+              <label class="label" for="imgBg">Фон и обстановка</label>
+              <textarea id="imgBg" style="min-height:88px" placeholder="Где происходит действие, детали окружения"></textarea>
+            </div>
+          </div>
+          <div class="field">
+            <label class="label" for="imgExtra">Дополнительные элементы</label>
+            <input type="text" id="imgExtra" placeholder="Предметы, символы, надписи">
+          </div>
+        </div>
+
+        <div id="imgDeco" style="display:none">
+          <div class="field">
+            <span class="label">Тип декоративного элемента</span>
+            <div class="opts cols2" id="decoType"></div>
+          </div>
+          <div class="field">
+            <label class="label" for="decoSize">Размер</label>
+            <select id="decoSize"><option>крупный</option><option selected>средний</option><option>мелкий</option></select>
+          </div>
+        </div>
+
+        <div id="imgInfo" style="display:none">
+          <div class="grid2">
+            <div class="field">
+              <label class="label" for="infoCenter">Центральный элемент</label>
+              <input type="text" id="infoCenter" placeholder="Например: растительная клетка в разрезе">
+            </div>
+            <div class="field">
+              <label class="label" for="infoBranch">Ветви / блоки</label>
+              <input type="text" id="infoBranch" placeholder="Например: 5 органоидов с подписями">
+            </div>
+          </div>
+          <div class="grid2">
+            <div class="field">
+              <label class="label" for="infoLinks">Связи между элементами</label>
+              <input type="text" id="infoLinks" placeholder="Стрелки, линии с пояснениями">
+            </div>
+            <div class="field">
+              <label class="label" for="infoLabels">Подписи</label>
+              <input type="text" id="infoLabels" placeholder="Какие надписи должны быть на схеме">
+            </div>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label class="label" for="imgStyle">Стиль</label>
+            <select id="imgStyle">
+              <option selected>мультяшный</option><option>акварель</option><option>детский рисунок</option>
+              <option>инфографика</option><option>реалистичный</option><option>плоский минимализм (flat)</option><option>3D-иллюстрация</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="label" for="imgColors">Цветовая гамма</label>
+            <input type="text" id="imgColors" placeholder="бирюзовый, коралловый, золотой">
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label class="label" for="imgFormat">Формат</label>
+            <select id="imgFormat">
+              <option selected>вертикальный (книжный)</option><option>горизонтальный</option><option>квадратный</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="label" for="imgMood">Настроение</label>
+            <input type="text" id="imgMood" value="доброе, весёлое, вдохновляющее">
+          </div>
+        </div>
+        <div class="group" style="margin-top:2px">
+          <h4>🚫 Ограничения</h4>
+          <div class="mini" id="imgLimits"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ИНТЕРАКТИВНЫЙ ЛИСТ -->
+    <section class="card reveal" id="htmlCard">
+      <div class="card-head" style="background:linear-gradient(180deg,#edfaf5,#fff)">
+        <div class="step-n" style="background:linear-gradient(135deg,#0d9488,#10b981);box-shadow:0 6px 14px rgba(13,148,136,.32)">💻</div>
+        <div class="head-txt"><h2>Интерактивный HTML-рабочий лист</h2><div class="sub">Промт №3 — для DeepSeek, Qwen, YandexGPT</div></div>
+      </div>
+      <div class="card-body">
+
+        <div class="field">
+          <span class="label">Вариант листа</span>
+          <div class="opts" id="htmlVar"></div>
+        </div>
+
+        <div class="group">
+          <h4>🕹 Интерактивные механики <span class="mini-pill" id="mechCount">0 выбрано</span></h4>
+          <div class="mini" id="mechList"></div>
+        </div>
+
+        <div id="htmlDnd" style="display:none;margin-bottom:15px">
+          <div class="field" style="margin-bottom:0">
+            <label class="label" for="dndTasks">Задания с перетаскиванием (drag-and-drop)</label>
+            <textarea id="dndTasks" placeholder="1. Перетащить слова в правильные категории: …&#10;2. Расставить этапы по порядку: …&#10;3. Соединить пары (понятие — определение): …"></textarea>
+            <div class="hint">Если оставить пустым — в промт попадут типовые задания на перетаскивание.</div>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label class="label" for="htmlTasks">Задания для HTML-листа</label>
+            <textarea id="htmlTasks" style="min-height:132px" placeholder="Задание 1 (выбор ответа): …&#10;Задание 2 (вставка): …"></textarea>
+          </div>
+          <div class="field">
+            <label class="label" for="htmlKeys">Ключ с правильными ответами</label>
+            <textarea id="htmlKeys" style="min-height:132px" placeholder="Задание 1: вариант 2&#10;Задание 2: …"></textarea>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="label">Шкала оценивания</span>
+          <div class="opts cols2" id="scaleOpts"></div>
+        </div>
+
+        <div class="group">
+          <h4>🗂 Оформление заданий <span class="mini-pill" id="cardCount">0 выбрано</span></h4>
+          <div class="mini" id="cardStyle"></div>
+        </div>
+
+        <div class="grid3">
+          <div class="field">
+            <label class="label" for="numStyle">Нумерация</label>
+            <select id="numStyle">
+              <option selected>цифры в кружке (1, 2, 3)</option>
+              <option>обычные цифры (1., 2., 3.)</option>
+              <option>звёздочки / значки</option>
+              <option>эмодзи по теме урока</option>
+              <option>буквы (А, Б, В)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="label" for="answerStyle">Поля для ответов</label>
+            <select id="answerStyle">
+              <option selected>рамки и поля ввода</option>
+              <option>линейки «в клетку», как в тетради</option>
+              <option>пустые строки</option>
+              <option>таблицы с ячейками</option>
+              <option>место для рисунка + строки</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="label" for="taskHead">Заголовок задания</label>
+            <select id="taskHead">
+              <option selected>крупный + иконка + баллы</option>
+              <option>название + краткая инструкция</option>
+              <option>только номер и текст</option>
+              <option>вопрос-обращение к ученику</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="group">
+          <h4>🔘 Набор кнопок <span class="mini-pill" id="btnCount">0 кнопок</span></h4>
+          <div class="mini" id="btnSetList"></div>
+        </div>
+        <div class="grid3">
+          <div class="field">
+            <label class="label" for="btnStyle">Стиль кнопок</label>
+            <select id="btnStyle">
+              <option selected>крупные округлые с мягкой тенью</option>
+              <option>плоские минималистичные</option>
+              <option>с градиентом и скруглением</option>
+              <option>игровые — «как в мобильной игре»</option>
+              <option>контурные (outline)</option>
+              <option>иконка + текст</option>
+              <option>объёмные 3D с нажатием вниз</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="label" for="btnColor">Цвет кнопок</label>
+            <select id="btnColor">
+              <option selected>зелёный акцент</option><option>синий акцент</option><option>бирюзовый акцент</option>
+              <option>оранжевый акцент</option><option>фиолетовый акцент</option>
+              <option>в цвет общей палитры листа</option>
+              <option>разные цвета по назначению</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="label" for="btnPos">Расположение кнопок</label>
+            <select id="btnPos">
+              <option selected>плавающая панель снизу (всегда видна)</option>
+              <option>одна панель в конце листа</option>
+              <option>кнопки под каждым заданием</option>
+              <option>панель в шапке листа</option>
+              <option>две панели: под заданиями и в конце</option>
+            </select>
+          </div>
+        </div>
+        <div class="group">
+          <h4>🖱 Поведение кнопок</h4>
+          <div class="mini" id="btnExtra"></div>
+        </div>
+
+        <div class="group">
+          <h4>🎮 Игровые элементы <span class="mini-pill" id="gameCount">0 элементов</span></h4>
+          <div class="mini" id="gameList"></div>
+        </div>
+        <div class="field">
+          <label class="label" for="gameStyle">Игровая рамка / сюжет</label>
+          <input type="text" id="gameStyle" placeholder="Например: квест «Спаси сказочного героя», путешествие по карте, космическая миссия">
+        </div>
+
+        <div class="grid3">
+          <div class="field">
+            <label class="label" for="htmlBg">Фон страницы</label>
+            <select id="htmlBg">
+              <option selected>светлый градиент</option><option>голубой</option><option>зелёный</option>
+              <option>жёлтый / тёплый</option><option>белый минимализм</option><option>тёмный</option>
+              <option>тематический узор по теме урока</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="label" for="htmlAccent">Основной цвет</label>
+            <select id="htmlAccent">
+              <option selected>зелёный</option><option>синий</option><option>бирюзовый</option>
+              <option>фиолетовый</option><option>оранжевый</option><option>розовый</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="label" for="htmlIcons">Иконки</label>
+            <select id="htmlIcons">
+              <option selected>эмодзи</option><option>мультяшные иконки</option>
+              <option>предметные (математические / филологические)</option><option>минималистичные SVG</option>
+            </select>
+          </div>
+        </div>
+        <div class="group">
+          <h4>⚙️ Технические требования</h4>
+          <div class="mini" id="htmlTech"></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ПАНЕЛЬ ГОТОВОГО ПРОМТА -->
+  <aside class="preview" id="preview" aria-label="Готовый промт">
+    <div class="pv-head">
+      <div class="pv-title">
+        <span class="live"></span>
+        <span class="tt">ГОТОВЫЙ ПРОМТ — обновляется автоматически</span>
+        <button class="pv-close" id="pvClose" type="button" aria-label="Закрыть">✕</button>
+      </div>
+      <div class="tabs" id="tabs" role="tablist">
+        <button class="tab active" data-tab="main" role="tab">📋 Основной</button>
+        <button class="tab" data-tab="img" role="tab">🎨 Иллюстрация <span class="lock" id="lockImg">🔒</span></button>
+        <button class="tab" data-tab="html" role="tab">💻 HTML-лист <span class="lock" id="lockHtml">🔒</span></button>
+        <button class="tab" data-tab="guide" role="tab">🧭 Инструкция</button>
+      </div>
+    </div>
+    <div class="pv-body"><pre id="output"></pre></div>
+    <div class="pv-foot">
+      <button class="btn primary" id="btnCopy" type="button">📋 Копировать</button>
+      <button class="btn" id="btnDownload" type="button">⬇ Скачать .txt</button>
+      <button class="btn ghost" id="btnDownloadAll" type="button">📦 Все промты</button>
+      <span class="chars" id="chars">0 симв.</span>
+    </div>
+  </aside>
+</div>
+
+<button class="fab" id="fab" type="button">📋 Показать промт</button>
+<div class="toast" id="toast" role="status" aria-live="polite">Скопировано!</div>
+
+<footer>Методическая основа — «Идеальные промты для создания рабочих листов» · Промт №1 (задания) · Промт №2 (изображения) · Промт №3 (интерактивный HTML)</footer>
+
+<script>
+/* =========================================================
+   ДАННЫЕ
+   ========================================================= */
+const SUBJECTS = [
+  ['Математика','математики'],['Русский язык','русского языка'],['Литература','литературы'],
+  ['Литературное чтение','литературного чтения'],['Английский язык','английского языка'],
+  ['Немецкий язык','немецкого языка'],['Информатика','информатики'],['История','истории'],
+  ['Обществознание','обществознания'],['География','географии'],['Биология','биологии'],
+  ['Физика','физики'],['Химия','химии'],['Окружающий мир','окружающего мира'],
+  ['Алгебра','алгебры'],['Геометрия','геометрии'],['ИЗО','изобразительного искусства'],
+  ['Музыка','музыки'],['Технология','технологии'],['Физическая культура','физической культуры'],
+  ['ОБЖ','основ безопасности жизнедеятельности'],['Экономика','экономики'],['Право','права'],
+  ['Астрономия','астрономии'],['Родной язык','родного языка'],['Внеурочная деятельность','внеурочной деятельности'],
+  ['Другой (вписать)','']
+];
+const GOALS = [
+  ['закрепить изученный материал','Отработка и устойчивый навык'],
+  ['повторить и систематизировать знания по теме','Обобщение перед контрольной'],
+  ['диагностировать пробелы в знаниях','Найти, что не усвоено'],
+  ['сформировать новые навыки','Первичное применение'],
+  ['провести контроль знаний','Проверочная работа']
+];
+const DIFFS = [['базовый','Все задания одного уровня'],['повышенный','Для сильных учеников'],['смешанный','Базовые + повышенные + творческие']];
+const ORDERS = [['по возрастанию сложности','От простого к сложному'],['в случайном порядке','Перемешанные задания'],['по тематическим блокам','Группы по подтемам']];
+const TYPES = [
+  ['single','✅','Один правильный ответ (выбери из 3–4 вариантов)'],
+  ['multi','☑️','Несколько правильных ответов (выбери все верные)'],
+  ['insert','✍️','Вставь пропущенное слово / букву / число'],
+  ['match','🔗','Установи соответствие (соедини стрелками)'],
+  ['truefalse','⚖️','Верно / Неверно (отметь утверждения)'],
+  ['open','💬','Открытые вопросы (развёрнутый ответ в 2–3 предложения)'],
+  ['fix','🔧','Исправь ошибку в тексте / решении'],
+  ['order','🔢','Упорядочь по последовательности (расставь по порядку)'],
+  ['case','🧩','Кейс / ситуационная задача (примени знания на практике)'],
+  ['creative','🎨','Творческое задание (придумай, нарисуй, создай, опиши)'],
+  ['work','📊','Работа с текстом / таблицей / схемой / рисунком'],
+  ['selfcheck','🔍','Задание на самопроверку (найди ошибку в готовом решении)'],
+  ['game','🎲','Игровое задание (кроссворд, филворд, ребус, лабиринт)']
+];
+const FMT_START = [
+  ['title','Заголовок: «Рабочий лист по теме "…"»'],['fio','Поле для фамилии и имени ученика'],
+  ['date','Поле для даты выполнения'],['instr','Краткую инструкцию для ученика (что делать, сколько времени)']
+];
+const FMT_TASK = [
+  ['num','Номер и краткое название (например, «Задание 1. Вставь пропущенное слово»)'],
+  ['verb','Чёткую инструкцию, начинающуюся с глагола: «Прочитай», «Выбери», «Соедини», «Напиши»'],
+  ['space','Достаточно места для выполнения (пустые строки, поля, рамки)'],
+  ['points','Указание максимального балла (например, «Максимум 3 балла»)']
+];
+const FMT_REQ = [
+  ['age','Соответствовать возрастным особенностям учащихся'],['clear','Иметь чёткие, однозначные формулировки'],
+  ['varied','Быть разнообразными по формату'],['levels','Включать задания разных уровней сложности']
+];
+const FMT_END = [
+  ['reflect','Блок для рефлексии: 3 вопроса'],['self','Шкалу самооценки (смайлики или звёздочки)'],
+  ['key','Краткий ключ с правильными ответами для самопроверки']
+];
+const EXTRAS = [
+  ['live','Живой, понятный язык','Соответствует возрасту учеников',true],
+  ['examples','1–2 примера выполнения','Для самых сложных заданий',true],
+  ['volume','Не перегружать ученика','Оптимальный объём — 15–20 минут работы',true],
+  ['checkblock','Блок «Проверь себя» в конце','Ответы оформлены отдельным блоком',true],
+  ['fgos','Соответствие ФГОС','Лист готов к уроку без доработок',true],
+  ['motivate','Мотивирующий элемент','Игровая рамка / обращение к ученику',false],
+  ['diffmark','Подсказки для слабых учеников','Сноски-помощники в сложных заданиях',false]
+];
+const IMG_KINDS = [
+  ['char','Персонаж / сцена','Главная иллюстрация листа'],
+  ['deco','Декоративный элемент','Рамка, разделитель, иконки'],
+  ['info','Схема / инфографика','Наглядный материал']
+];
+const DECO_TYPES = [['рамка для текста'],['разделитель между заданиями'],['иконка для заголовка'],['набор маленьких рисунков']];
+const IMG_LIMITS = [
+  ['nofear','Без сложных и пугающих элементов',null,true],
+  ['noaggr','Без оружия и агрессии',null,true],
+  ['nopeople','Без людей (если не нужно для сюжета)',null,false],
+  ['clear','Изображение понятно детям',null,true],
+  ['notext','Без надписей и букв на изображении',null,true],
+  ['space','Оставить место для текста и заданий',null,true]
+];
+const HTML_VARS = [
+  [1,'Вариант 1. Интерактивный лист с проверкой ответов','Подсветка зелёным/красным, подсчёт баллов, оценка по шкале, скачивание результатов, блок рефлексии'],
+  [2,'Вариант 2. Лист с автоматической оценкой','Автооценка «Отлично / Хорошо / Удовл. / Требуется доработка» + кнопки «Показать ответы» и «Сбросить»']
+];
+const SCALES = [
+  ['std','Стандартная','90–100% — «Отлично», 70–89% — «Хорошо», 50–69% — «Удовлетворительно», менее 50% — «Требуется доработка»'],
+  ['5ball','По 5-балльной шкале','5 — «Отлично», 4 — «Хорошо», 3 — «Удовлетворительно», 2 — «Требуется доработка»'],
+  ['nofor','Без оценки, только баллы','Вывести количество верных ответов и процент'],
+  ['game','Игровая (очки + звёзды)','Очки за задания и 1–3 звезды в финале, оценка выводится текстом']
+];
+const MECHANICS = [
+  ['dnd','🧲 Перетаскивание (drag-and-drop)','слова в категории, пары, порядок блоков',true],
+  ['match','🔗 Соединить линиями (matching)','клик по двум элементам или линия мышью',false],
+  ['choice','✅ Выбор ответа (радио / чекбоксы)','один или несколько верных вариантов',true],
+  ['input','⌨️ Ввод текста в поле','вставить слово, букву, число, ответ',true],
+  ['select','📃 Выпадающий список (select)','быстрый выбор варианта из списка',false],
+  ['sort','🔢 Сортировка / упорядочивание','расставить этапы, числа, слова по порядку',false],
+  ['hotspot','🖱 Кликабельные зоны на изображении','отметить элемент на картинке, карте, схеме',false],
+  ['tf','⚖️ Кнопки «Верно / Неверно»','быстрая проверка утверждений',false],
+  ['slider','🎚 Ползунок / шкала','выбрать значение, оценку, степень согласия',false],
+  ['open','💬 Открытый ответ (textarea)','развёрнутый ответ в 2–3 предложения',false],
+  ['fill','🧩 Заполнить пропуски в тексте','клик по пропуску + выбор слова',false],
+  ['cross','🎲 Кроссворд / филворд / ребус','интерактивная сетка с буквами',false],
+  ['timer','⏱ Таймер на задание или на весь лист','обратный отсчёт времени',false],
+  ['flip','🃏 Карточки-перевёртыши','клик открывает вопрос или ответ',false]
+];
+const BTN_SET = [
+  ['check','«Проверить ответы»',null,true],
+  ['show','«Показать ответы»',null,true],
+  ['reset','«Сбросить» / «Попробовать снова»',null,true],
+  ['hint','«Подсказка»',null,false],
+  ['next','«Далее» (пошаговый переход)',null,false],
+  ['save','«Скачать результаты»',null,false],
+  ['print','«Печать»',null,false],
+  ['teacher','«Ключ для учителя» (скрытый блок)',null,false],
+  ['send','«Отправить учителю» (email / ссылка)',null,false]
+];
+const BTN_EXTRA = [
+  ['bhover','Анимация при наведении и нажатии',null,true],
+  ['btouch','Крупные кнопки — удобно нажимать пальцем',null,true],
+  ['bsticky','Кнопка «Проверить» всегда видна на экране',null,false],
+  ['bicon','У каждой кнопки своя иконка / эмодзи',null,true],
+  ['bdisabled','Неактивные кнопки «серые» до заполнения',null,false]
+];
+const GAME = [
+  ['progress','📊 Прогресс-бар выполнения','полоса вверху листа',true],
+  ['points','⭐ Баллы и счётчик очков','начисление за каждое задание',true],
+  ['stars','🌟 Звёзды / рейтинг в конце','1–3 звезды за результат',true],
+  ['badges','🏅 Значки-достижения (бейджи)','«Без ошибок», «Быстрый ум»',false],
+  ['levels','🗺 Уровни сложности','переход от уровня к уровню',false],
+  ['timerG','⏳ Таймер обратного отсчёта','ограничение времени на лист',false],
+  ['sound','🔊 Звуковые эффекты','верно / неверно / финал',false],
+  ['confetti','🎉 Конфетти при успехе','праздничная анимация',false],
+  ['mascot','🐾 Персонаж-помощник','маскот даёт подсказки и подбадривает',false],
+  ['lives','❤️ Попытки / «жизни»','2–3 попытки на задание',false],
+  ['hintG','💡 Подсказка за минус балла','открывает подсказку по кнопке',false],
+  ['story','📖 Игровой сюжет / квест-рамка','«Помоги герою пройти квест»',false],
+  ['reward','🎁 Бонус в конце','открытка, сертификат, секретная картинка',false],
+  ['leader','🏆 Таблица результатов класса','сводка после отправки',false]
+];
+const CARD_STYLES = [
+  ['rounded','Скруглённые карточки с мягкой тенью'],
+  ['notebook','«Тетрадный» стиль: клетка / линейка'],
+  ['paper','Листы бумаги с загнутым уголком'],
+  ['flat','Минимализм: без рамок, линии и отступы'],
+  ['color','Цветные блоки по типам заданий'],
+  ['quest','Квест-карточки с номерами-звёздами'],
+  ['soft','Пастельные карточки с лёгкой обводкой'],
+  ['board','«Доска» с наклейками и стикерами']
+];
+const HTML_TECH = [
+  ['adaptive','Адаптивная вёрстка (компьютер и планшет)',null,true],
+  ['libs','Только чистый HTML + CSS + JS, без библиотек',null,true],
+  ['comments','Комментарии к коду для понимания структуры',null,true],
+  ['ready','Код готов к использованию: открыл в браузере',null,true],
+  ['imgph','Заглушки для изображений',null,true],
+  ['reset','Кнопка «Попробовать снова» очищает поля',null,true],
+  ['downloadres','Скачивание результатов текстовым файлом',null,false],
+  ['print','Версия для печати (ч/б, без кнопок)',null,false],
+  ['saveprogress','Сохранение прогресса (localStorage)',null,false],
+  ['a11y','Доступность: крупные шрифты, контраст',null,false]
+];
+
+/* =========================================================
+   РАЗМЕТКА
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const CHECK_SVG = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 6.3l2.6 2.6L10 3.4" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const DEF = {};
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function radioGroup(host, items, name, checkedIdx, withSmall){
+  $(host).innerHTML = items.map((it,i)=>`
+    <label class="opt">
+      <input type="radio" name="${name}" value="${esc(it[0])}" ${i===checkedIdx?'checked':''}>
+      <span><i class="dot"></i><span>${esc(it[1])}${withSmall && it[2] ? `<small>${esc(it[2])}</small>`:''}</span></span>
+    </label>`).join('');
+}
+function switchGroup(host, items){
+  $(host).innerHTML = items.map(it=>`
+    <label class="switch">
+      <input type="checkbox" name="extra" value="${esc(it[0])}" ${it[3]?'checked':''}><span class="track"></span>
+      <span class="txt">${esc(it[1])}<small>${esc(it[2])}</small></span>
+    </label>`).join('');
+  DEF.extra = {};
+  items.forEach(it=>DEF.extra[it[0]] = !!it[3]);
+}
+/* items: [key, label] (default true) | [key, label, sub, def] | [key, emojiLabel, sub, def] */
+function chkGroup(host, items, name, emojiMode){
+  const map = {};
+  $(host).innerHTML = items.map(it=>{
+    const def = (it.length === 2) ? true : !!it[3];
+    map[it[0]] = def;
+    const sub = it.length >= 4 ? it[2] : null;
+    let label = it[1];
+    const sp = label.indexOf(' ');
+    const emo = (emojiMode && sp > 0 && sp <= 3) ? `<span class="emo">${label.slice(0,sp)}</span> ${label.slice(sp+1)}` : label;
+    return `<label class="chk">
+      <input type="checkbox" name="${name}" value="${esc(it[0])}" ${def?'checked':''}>
+      <span><i class="box">${CHECK_SVG}</i><span class="tx">${emo}${sub?`<small>${esc(sub)}</small>`:''}</span></span>
+    </label>`;
+  }).join('');
+  DEF[name] = map;
+}
+
+$('#subject').innerHTML = SUBJECTS.map(s=>`<option value="${esc(s[0])}">${esc(s[0])}</option>`).join('');
+$('#gradeChips').innerHTML = Array.from({length:11},(_,i)=>i+1).map(g=>`
+  <label class="chip"><input type="radio" name="grade" value="${g}" ${g===5?'checked':''}><span>${g}</span></label>`).join('');
+radioGroup('#goalOpts', GOALS.map(g=>[g[0],g[0],g[1]]), 'goal', 0, true);
+radioGroup('#diffOpts', DIFFS.map(d=>[d[0],d[0],d[1]]), 'diff', 2, true);
+radioGroup('#orderOpts', ORDERS.map(o=>[o[0],o[0],o[1]]), 'order', 0, true);
+$('#typeList').innerHTML = TYPES.map(t=>`
+  <label class="chk">
+    <input type="checkbox" name="type" value="${t[0]}" ${['match','insert','open','creative'].includes(t[0])?'checked':''}>
+    <span><i class="box">${CHECK_SVG}</i><span class="emo">${t[1]}</span><span class="tx">${esc(t[2])}</span></span>
+  </label>`).join('');
+chkGroup('#fmtStart', FMT_START, 'fmtStart');
+chkGroup('#fmtTask', FMT_TASK, 'fmtTask');
+chkGroup('#fmtReq', FMT_REQ, 'fmtReq');
+chkGroup('#fmtEnd', FMT_END, 'fmtEnd');
+switchGroup('#extraList', EXTRAS);
+radioGroup('#imgKind', IMG_KINDS.map(k=>[k[0],k[1],k[2]]), 'imgKind', 0, true);
+radioGroup('#decoType', DECO_TYPES.map(d=>[d[0],d[0],'']), 'decoType', 0, false);
+chkGroup('#imgLimits', IMG_LIMITS, 'imgLimit');
+radioGroup('#htmlVar', HTML_VARS.map(v=>[v[0],v[1],v[2]]), 'htmlVar', 1, true);
+radioGroup('#scaleOpts', SCALES.map(s=>[s[0],s[1],s[2]]), 'scale', 0, true);
+chkGroup('#mechList', MECHANICS, 'mech', true);
+chkGroup('#btnSetList', BTN_SET, 'btnSet');
+chkGroup('#btnExtra', BTN_EXTRA, 'btnExtra');
+chkGroup('#gameList', GAME, 'game', true);
+chkGroup('#cardStyle', CARD_STYLES.map((c,i)=> i===0 ? [c[0],c[1],null,true] : [c[0],c[1],null,false]), 'cardStyle');
+chkGroup('#htmlTech', HTML_TECH, 'htmlTech');
+
+/* =========================================================
+   СОСТОЯНИЕ
+   ========================================================= */
+const files = [];
+let activeTab = 'main';
+let imgOn = false, htmlOn = false;
+
+const checkedVals = name => $$(`input[name="${name}"]:checked`).map(i=>i.value);
+const radioVal = name => { const e = $(`input[name="${name}"]:checked`); return e ? e.value : ''; };
+
+function collect(){
+  const subjSel = $('#subject').value;
+  const subjRec = SUBJECTS.find(s=>s[0]===subjSel);
+  const custom = subjSel === 'Другой (вписать)';
+  const subjName = custom ? ($('#subjectCustom').value.trim() || '[предмет]') : subjSel;
+  const subjGen  = custom ? ($('#subjectCustom').value.trim() || '[предмет]') : subjRec[1];
+  const grade = +radioVal('grade') || 5;
+  return {
+    subject: subjName, subjectGen: subjGen, grade, age: grade + 6,
+    topic: $('#topic').value.trim() || '[тема]',
+    goal: radioVal('goal'),
+    count: Math.max(1, +$('#tasksCount').value || 5),
+    time: Math.max(1, +$('#timeMin').value || 15),
+    diff: radioVal('diff'), order: radioVal('order'),
+    types: checkedVals('type'),
+    fmtStart: checkedVals('fmtStart'), fmtTask: checkedVals('fmtTask'),
+    fmtReq: checkedVals('fmtReq'), fmtEnd: checkedVals('fmtEnd'),
+    levels: $('#levels').value, reflectQ: $('#reflectQ').value.trim(),
+    extras: checkedVals('extra'),
+    ownOn: $('#ownOn').checked, ownTasks: $('#ownTasks').value.trim(),
+    shotOn: $('#shotOn').checked, files,
+    imgKind: radioVal('imgKind'),
+    imgObject: $('#imgObject').value.trim(), imgChars: $('#imgChars').value.trim(),
+    imgBg: $('#imgBg').value.trim(), imgExtra: $('#imgExtra').value.trim(),
+    decoType: radioVal('decoType'), decoSize: $('#decoSize').value,
+    infoCenter: $('#infoCenter').value.trim(), infoBranch: $('#infoBranch').value.trim(),
+    infoLinks: $('#infoLinks').value.trim(), infoLabels: $('#infoLabels').value.trim(),
+    imgStyle: $('#imgStyle').value, imgColors: $('#imgColors').value.trim(),
+    imgFormat: $('#imgFormat').value, imgMood: $('#imgMood').value.trim(),
+    imgLimits: checkedVals('imgLimit'),
+    htmlVar: +radioVal('htmlVar') || 1,
+    mech: checkedVals('mech'), dndTasks: $('#dndTasks').value.trim(),
+    htmlTasks: $('#htmlTasks').value.trim(), htmlKeys: $('#htmlKeys').value.trim(),
+    scale: radioVal('scale'),
+    cardStyle: checkedVals('cardStyle'), numStyle: $('#numStyle').value,
+    answerStyle: $('#answerStyle').value, taskHead: $('#taskHead').value,
+    btnSet: checkedVals('btnSet'), btnStyle: $('#btnStyle').value,
+    btnColor: $('#btnColor').value, btnPos: $('#btnPos').value, btnExtra: checkedVals('btnExtra'),
+    game: checkedVals('game'), gameStyle: $('#gameStyle').value.trim(),
+    htmlBg: $('#htmlBg').value, htmlAccent: $('#htmlAccent').value,
+    htmlIcons: $('#htmlIcons').value, htmlTech: checkedVals('htmlTech')
+  };
+}
+
+/* =========================================================
+   ПРОМТЫ
+   ========================================================= */
+const plural = (n,f) => { const a=n%100,b=n%10; return (a>10&&a<20)?f[2]:(b===1?f[0]:b>1&&b<5?f[1]:f[2]); };
+const list = (arr, empty) => arr.length ? arr : [empty];
+const lines = txt => txt.split('\n').map(s=>s.trim()).filter(Boolean);
+const typeLabels = arr => TYPES.filter(t=>arr.includes(t[0])).map(t=>t[2]);
+const clean = s => s.replace(/^\S+\s/,'');
+
+function buildMain(d){
+  const L = [];
+  L.push(`Ты — опытный учитель ${d.subjectGen} с 15-летним стажем, эксперт по разработке дидактических материалов и методист. Твоя задача — создать рабочий лист по теме «${d.topic}» для учащихся ${d.grade} класса.`);
+  L.push('');
+  L.push(`Цель рабочего листа: ${d.goal}`);
+  L.push('');
+  L.push('Параметры рабочего листа:');
+  L.push(`1. Количество заданий: ${d.count} ${plural(d.count,['задание','задания','заданий'])}`);
+  L.push(`2. Время выполнения: ${d.time} минут`);
+  L.push(`3. Сложность: ${d.diff}`);
+  L.push(`4. Порядок заданий: ${d.order}`);
+  L.push('');
+  const tl = typeLabels(d.types);
+  L.push(`Типы заданий (используй именно эти${tl.length? ', не менее '+tl.length+' разных типов':''}):`);
+  list(tl,'[отметь нужные типы из списка 13 форматов]').forEach((t,i)=>L.push(`${i+1}. ${t}`));
+  L.push('');
+  L.push('Требования к оформлению:');
+  let n = 1;
+  if(d.fmtStart.length){
+    L.push(`${n}. В начале рабочего листа добавь:`);
+    const map = {title:`Заголовок: «Рабочий лист по теме "${d.topic}"»`, fio:'Поле для фамилии и имени ученика', date:'Поле для даты выполнения', instr:`Краткую инструкцию для ученика (что нужно делать, сколько времени — ${d.time} мин.)`};
+    d.fmtStart.forEach((k,i)=>L.push(`   ${n}.${'abcd'[i]}. ${map[k]}`));
+    n++;
+  }
+  if(d.fmtTask.length){
+    L.push(`${n}. Каждое задание должно иметь:`);
+    const map = {num:'Номер и краткое название (например, «Задание 1. Вставь пропущенное слово»)', verb:'Чёткую инструкцию к выполнению (начинается с глагола: «Прочитай», «Выбери», «Соедини», «Напиши»)', space:'Достаточно места для выполнения задания (пустые строки, поля, рамки)', points:'Указание на максимальный балл за задание (например, «Максимум 3 балла»)'};
+    d.fmtTask.forEach((k,i)=>L.push(`   ${n}.${'abcd'[i]}. ${map[k]}`));
+    n++;
+  }
+  if(d.fmtReq.length){
+    L.push(`${n}. Задания должны быть:`);
+    const map = {age:'Соответствовать возрастным особенностям учащихся', clear:'Иметь чёткие, однозначные формулировки', varied:'Быть разнообразными по формату', levels:`Включать задания разных уровней сложности: ${d.levels}`};
+    d.fmtReq.forEach((k,i)=>L.push(`   ${n}.${'abcd'[i]}. ${map[k]}`));
+    n++;
+  }
+  if(d.fmtEnd.length){
+    L.push(`${n}. В конце рабочего листа добавь:`);
+    const map = {reflect:`Блок для рефлексии: 3 вопроса (${d.reflectQ || '«Что было самым сложным?», «Что было самым интересным?», «Что нового я узнал?»'})`, self:'Шкалу самооценки (например, смайлики или звёздочки)', key:'Краткий ключ с правильными ответами для самопроверки'};
+    d.fmtEnd.forEach((k,i)=>L.push(`   ${n}.${'abcd'[i]}. ${map[k]}`));
+  }
+  L.push('');
+  const ex = d.extras;
+  if(ex.length){
+    L.push('Дополнительные требования:');
+    const map = {
+      live:'Используй живой, понятный язык, соответствующий возрасту учеников',
+      examples:'Добавь 1–2 примера выполнения для самых сложных заданий',
+      volume:`Задания не должны перегружать ученика — оптимальный объём ${d.time} минут работы`,
+      checkblock:'Оформи ответы в виде отдельного блока «Проверь себя» в конце листа',
+      fgos:'Рабочий лист должен соответствовать ФГОС',
+      motivate:'Добавь мотивирующий элемент: игровую рамку, обращение к ученику или небольшую историю по теме',
+      diffmark:'Добавь подсказки-сноски для учеников, которым сложно (пометка «подсказка»)'
+    };
+    ex.forEach((k,i)=>L.push(`${i+1}. ${map[k]}`));
+    L.push('');
+  }
+  if(d.ownOn && d.ownTasks){
+    L.push('МОИ ЗАДАНИЯ — возьми их за основу (можно доработать формулировки, добавить поля для ответов и баллы, но не заменяй суть):');
+    L.push(d.ownTasks); L.push('');
+  }
+  if(d.shotOn){
+    L.push('СКРИНШОТЫ ЗАДАНИЙ:');
+    L.push(files.length
+      ? `К этому сообщению я прикреплю ${files.length} ${plural(files.length,['скриншот','скриншота','скриншотов'])}: ${files.map(f=>f.name).join(', ')}.`
+      : 'К этому сообщению я прикреплю скриншоты с заданиями (файлы приложены к диалогу).');
+    L.push('Внимательно прочитай всё, что на них изображено, перенеси эти задания в рабочий лист, сохранив формулировки, и дополни лист недостающими блоками (заголовок, поля, баллы, рефлексия, ключ ответов).');
+    L.push('');
+  }
+  const imp = [];
+  if(ex.includes('fgos')) imp.push('соответствовать ФГОС');
+  imp.push('быть методически выверенным','быть готовым к использованию на уроке без доработок');
+  L.push('Важно: рабочий лист должен ' + imp.join(', ') + '.');
+  L.push('');
+  L.push('Формат выдачи: готовый рабочий лист (текстом, с разметкой по заданиям) + отдельный блок «Проверь себя» с ключом ответов.');
+  return L.join('\n');
+}
+
+function buildImage(d){
+  const L = [];
+  const lim = IMG_LIMITS.filter(l=>d.imgLimits.includes(l[0])).map(l=>l[1]);
+  if(d.imgKind === 'char'){
+    L.push(`Создай промт для нейросети изображений на тему «${d.topic}» для рабочего листа для детей ${d.age} лет (${d.grade} класс, предмет — ${d.subject}).`);
+    L.push('');
+    L.push(`Центральный объект: ${d.imgObject || '[опиши, что должно быть на изображении — персонаж, сцена, объект]'}`);
+    L.push('Детали изображения:');
+    L.push(`1. Персонажи: ${d.imgChars || '[кто изображён, сколько, как выглядят, какие действия совершают]'}`);
+    L.push(`2. Фон и обстановка: ${d.imgBg || '[где происходит действие, какие детали окружения]'}`);
+    L.push(`3. Дополнительные элементы: ${d.imgExtra || '[какие предметы, символы, надписи должны присутствовать]'}`);
+    L.push('Художественные параметры:');
+    L.push(`1. Стиль: ${d.imgStyle}`);
+    L.push(`2. Цветовая гамма: ${d.imgColors || '[какие цвета преобладают]'}`);
+    L.push(`3. Формат: ${d.imgFormat}`);
+    L.push(`4. Настроение: ${d.imgMood}`);
+  } else if(d.imgKind === 'deco'){
+    L.push(`Создай промт для нейросети изображений для оформления рабочего листа по теме «${d.topic}» для детей ${d.age} лет (${d.grade} класс).`);
+    L.push('');
+    L.push(`Тип элемента: ${d.decoType}`);
+    L.push('Стиль и оформление:');
+    L.push(`1. Стиль: ${d.imgStyle === 'инфографика' ? 'минималистичный' : (d.imgStyle === 'акварель' ? 'мультяшный / акварельный' : d.imgStyle)}`);
+    L.push(`2. Цветовая гамма: ${d.imgColors || '[какие цвета]'}`);
+    L.push(`3. Размер: ${d.decoSize}`);
+    L.push('Особенности: элемент должен быть простым, не перегруженным деталями, сочетаться с основным стилем рабочего листа.');
+  } else {
+    L.push(`Создай промт для нейросети изображений: инфографика / схема по теме «${d.topic}» для учеников ${d.grade} класса.`);
+    L.push('');
+    L.push('Содержание схемы:');
+    L.push(`1. Центральный элемент: ${d.infoCenter || '[что в центре]'}`);
+    L.push(`2. Ветви / блоки: ${d.infoBranch || '[какие подтемы, сколько блоков]'}`);
+    L.push(`3. Связи между элементами: ${d.infoLinks || '[стрелки, линии с пояснениями]'}`);
+    L.push(`4. Подписи: ${d.infoLabels || '[какие надписи должны быть на схеме]'}`);
+    L.push('Стиль: инфографика, чёткие линии, схематичные рисунки, минималистичный дизайн.');
+    L.push(`Цвета: контрастные, не более 3–4 цветов${d.imgColors ? ' — ' + d.imgColors : ''}.`);
+    L.push('Формат: горизонтальный, подходит для вставки в рабочий лист.');
+    L.push('Ограничения: без лишнего текста, только ключевые слова.');
+  }
+  if(lim.length && d.imgKind !== 'info'){
+    L.push('Ограничения:'); lim.forEach((t,i)=>L.push(`${i+1}. ${t}`));
+  }
+  L.push('');
+  L.push('Назначение: иллюстрация для рабочего листа — должна оставлять достаточно места для текста и заданий.');
+  return L.join('\n');
+}
+
+function buildHtml(d){
+  const L = [];
+  const tl = typeLabels(d.types);
+  const tech = HTML_TECH.filter(t=>d.htmlTech.includes(t[0])).map(t=>t[1]);
+  const scaleRec = SCALES.find(s=>s[0]===d.scale);
+  const autoGrade = d.htmlVar === 2;
+  const mech = MECHANICS.filter(m=>d.mech.includes(m[0]));
+  const mechTxt = mech.map(m=>clean(m[1]));
+  const btns = BTN_SET.filter(b=>d.btnSet.includes(b[0])).map(b=>b[1]);
+  const btnEx = BTN_EXTRA.filter(b=>d.btnExtra.includes(b[0])).map(b=>b[1]);
+  const games = GAME.filter(g=>d.game.includes(g[0]));
+  const cards = CARD_STYLES.filter(c=>d.cardStyle.includes(c[0])).map(c=>c[1]);
+
+  L.push(`Ты — опытный веб-разработчик и педагог. Создай интерактивный HTML-рабочий лист по теме «${d.topic}» для учащихся ${d.grade} класса по предмету ${d.subject}${autoGrade ? ' с автоматической системой оценки' : ''}.`);
+  L.push('');
+  L.push('Параметры листа:');
+  L.push(`1. Количество заданий: ${d.count}`);
+  L.push(`2. Типы заданий: ${tl.length ? tl.join(', ') : 'выбор ответа, вставка слова, соответствие, открытый ответ'}`);
+  L.push(`3. Время выполнения: ${d.time} минут`);
+  L.push(`4. Интерактивные механики: ${mechTxt.length ? mechTxt.join(', ') : 'выбор ответа, ввод текста'}`);
+  L.push('');
+
+  L.push('Интерактивные механики (реализуй именно их):');
+  if(mech.length) mech.forEach((m,i)=>L.push(`${i+1}. ${clean(m[1])}${m[2] ? ' — ' + m[2] : ''}`));
+  else L.push('1. Выбор ответа (радиокнопки) и ввод текста в поле');
+
+  if(d.mech.includes('dnd')){
+    L.push('');
+    L.push('Задания с перетаскиванием (drag-and-drop):');
+    const dnd = d.dndTasks ? lines(d.dndTasks) : [
+      'Перетащить слова / понятия в правильные категории',
+      'Расставить события или этапы в правильном порядке',
+      'Соединить пары (понятие — определение) перетаскиванием'
+    ];
+    dnd.forEach((t,i)=>L.push(`${i+1}. ${t}`));
+    L.push('Требования к перетаскиванию:');
+    L.push('1. Элементы перетаскиваются мышью и пальцем (поддержка touch для планшета)');
+    L.push('2. При правильном расположении элемент фиксируется и меняет цвет на зелёный');
+    L.push('3. При неправильном — элемент плавно возвращается на исходную позицию');
+    L.push('4. Зоны-приёмники подсвечиваются при наведении элемента');
+    L.push('5. Результаты перетаскивания учитываются в общем подсчёте баллов');
+  }
+  if(d.mech.includes('match')){
+    L.push('');
+    L.push('Задание «Соедини линиями»: клик по элементу левой колонки, затем по элементу правой — между ними рисуется линия; повторный клик снимает пару.');
+  }
+  if(d.mech.includes('hotspot')){
+    L.push('');
+    L.push('Кликабельные зоны: на изображении (или заглушке) расположены невидимые области, ученик отмечает нужные элементы — верные подсвечиваются зелёным, неверные красным.');
+  }
+  if(d.mech.includes('flip')){
+    L.push('');
+    L.push('Карточки-перевёртыши: по клику карточка переворачивается с анимацией, показывая вопрос на лицевой стороне и подсказку или ответ на обороте.');
+  }
+  if(d.mech.includes('timer')){
+    L.push('');
+    L.push(`Таймер: обратный отсчёт ${d.time} минут в шапке листа; за 2 минуты до конца — предупреждение цветом, по истечении времени — автоматическая проверка ответов.`);
+  }
+  if(d.mech.includes('cross')){
+    L.push('');
+    L.push('Игровое задание: интерактивная сетка кроссворда / филворда, буквы вводятся с клавиатуры или кликом по экранным кнопкам.');
+  }
+
+  L.push('');
+  if(d.htmlVar === 1){
+    L.push('Структура HTML-страницы:');
+    L.push('1. Шапка страницы:');
+    L.push(`   1.a. Заголовок: «Интерактивный рабочий лист по теме "${d.topic}"»`);
+    L.push('   1.b. Поля для ввода: ФИО ученика, дата, класс');
+    L.push(`   1.c. Краткая инструкция (${d.time} мин, ${d.count} ${plural(d.count,['задание','задания','заданий'])}, сколько баллов можно получить)`);
+    L.push('2. Основной блок с заданиями: каждое задание — отдельная карточка, формат элемента управления зависит от механики (см. выше), оформление — с иконками или эмодзи');
+    L.push('3. Блок проверки:');
+    L.push('   3.a. Кнопка «Проверить ответы» — подсвечивает правильные ответы зелёным, неправильные красным');
+    L.push('   3.b. Отображение количества правильных ответов из общего числа');
+    L.push(`   3.c. Расчёт и вывод оценки по шкале: ${scaleRec[2]}`);
+    L.push('4. Блок результата: показ правильных ответов, кнопка «Попробовать снова», возможность скачать результаты текстовым файлом');
+    L.push('5. Блок рефлексии:');
+    L.push(`   5.a. ${d.fmtEnd.includes('reflect') ? '3 вопроса' : '2–3 вопроса'} с вариантами ответов (смайлики / звёзды)${d.reflectQ ? ': ' + d.reflectQ : ''}`);
+    if(d.fmtEnd.includes('self')) L.push('   5.b. Шкала самооценки (смайлики или звёздочки)');
+  }
+  if(d.htmlVar === 2){
+    L.push('Функциональность:');
+    L.push('1. После ввода всех ответов и нажатия кнопки «Проверить»:');
+    L.push('   1.a. Подсветка правильных ответов зелёным, неправильных — красным');
+    L.push('   1.b. Подсчёт количества правильных ответов и процента выполнения');
+    L.push('   1.c. Автоматическое выставление оценки по шкале:');
+    scaleRec[2].split(', ').forEach((s,i)=>L.push(`      1.c.${'i'.repeat(i+1)} ${s}`));
+    L.push('2. Кнопка «Показать ответы» — открывает блок со всеми правильными ответами');
+    L.push('3. Кнопка «Сбросить» — очищает все поля и возвращает лист в исходное состояние');
+  }
+
+  L.push('');
+  L.push('Задания:');
+  const tasks = d.htmlTasks ? lines(d.htmlTasks) : Array.from({length:d.count},(_,i)=>`Задание ${i+1}: [тип задания + текст]`);
+  tasks.forEach((t,i)=>L.push(`${i+1}. ${t}`));
+  L.push('');
+  L.push('Ключ с правильными ответами:');
+  if(d.htmlKeys) L.push(d.htmlKeys);
+  else if(d.ownOn && d.ownTasks) L.push('(сформируй ключ к заданиям выше и выведи его отдельным блоком)');
+  else Array.from({length:d.count},(_,i)=>L.push(`${i+1}. Задание ${i+1}: [ответ]`));
+
+  L.push('');
+  L.push('Оформление заданий:');
+  L.push(`1. Стиль карточек: ${cards.length ? cards.join(' + ') : 'скруглённые карточки с мягкой тенью'}`);
+  L.push(`2. Нумерация заданий: ${d.numStyle}`);
+  L.push(`3. Поля для ответов: ${d.answerStyle}`);
+  L.push(`4. Заголовок задания: ${d.taskHead}`);
+  L.push('5. Верный ответ подсвечивается зелёной рамкой, ошибка — красной, рядом появляется короткое пояснение');
+
+  L.push('');
+  L.push('Кнопки и управление:');
+  L.push(`1. Набор кнопок: ${btns.length ? btns.join(', ') : '«Проверить ответы», «Показать ответы», «Сбросить»'}`);
+  L.push(`2. Стиль кнопок: ${d.btnStyle}`);
+  L.push(`3. Цвет кнопок: ${d.btnColor}`);
+  L.push(`4. Расположение: ${d.btnPos}`);
+  if(btnEx.length) L.push('5. Дополнительно: ' + btnEx.join('; '));
+
+  L.push('');
+  L.push('Игровые элементы:');
+  if(games.length){
+    games.forEach((g,i)=>L.push(`${i+1}. ${clean(g[1])}${g[2] ? ' — ' + g[2] : ''}`));
+    if(d.gameStyle) L.push(`${games.length+1}. Игровая рамка / сюжет: ${d.gameStyle}`);
+  } else {
+    L.push('1. Без игровых элементов — строгий учебный стиль');
+  }
+
+  L.push('');
+  L.push('Дизайн и оформление:');
+  L.push(`1. Фон страницы: ${d.htmlBg}`);
+  L.push(`2. Цветовая схема: ${d.htmlAccent} как основной цвет, светлые карточки заданий, акцентные кнопки`);
+  L.push('3. Шрифты: крупные, легко читаемые, без засечек');
+  L.push(`4. Иконки: ${d.htmlIcons}`);
+  if(d.htmlTech.includes('adaptive')) L.push('5. Рабочий лист должен хорошо выглядеть на компьютере и планшете, вёрстка адаптивная (под разные размеры экрана)');
+
+  L.push('');
+  L.push('Важно:');
+  tech.forEach((t,i)=>L.push(`${i+1}. ${t}`));
+  L.push(`${tech.length+1}. Все скрипты и стили — внутри одного HTML-файла`);
+
+  if(d.files.length){
+    L.push('');
+    L.push(`Дополнительно: к сообщению приложены скриншоты (${files.map(f=>f.name).join(', ')}) — возьми задания с них и перенеси в интерактивный лист.`);
+  }
+  return L.join('\n');
+}
+
+function buildGuide(d){
+  const mech = MECHANICS.filter(m=>d.mech.includes(m[0])).map(m=>clean(m[1]));
+  const games = GAME.filter(g=>d.game.includes(g[0])).map(g=>clean(g[1]));
+  const btns = BTN_SET.filter(b=>d.btnSet.includes(b[0])).map(b=>b[1]);
+  const cards = CARD_STYLES.filter(c=>d.cardStyle.includes(c[0])).map(c=>c[1]);
+  return `🧭 КАК ИСПОЛЬЗОВАТЬ СОБРАННЫЕ ПРОМТЫ
+
+ШАГ 1. Откройте чатовую нейросеть (DeepSeek, Qwen, YandexGPT или GigaChat).
+ШАГ 2. Скопируйте вкладку «Основной промт» и отправьте в чат → получите готовые задания с ответами.
+ШАГ 3. Если нужны свои задания или скриншоты — включите раздел 6, напишите задания и прикрепите файлы К СООБЩЕНИЮ в нейросети (промт уже содержит указание использовать их).
+ШАГ 4. Нужна иллюстрация? Включите «Промт для персонажа», заполните детали и отправьте вкладку «Иллюстрация» в Qwen / Kandinsky / Шедеврум.
+ШАГ 5. Нужен интерактивный лист? Включите «Интерактивный HTML-лист»: выберите вариант, механики (drag-and-drop и другие), оформление заданий, кнопки и игровые элементы — затем отправьте вкладку «HTML-лист» в DeepSeek / Qwen. Скопируйте код в файл "рабочий-лист.html" и откройте в браузере.
+ШАГ 6. Соберите итоговый материал:
+   • Вариант А (базовый): текст заданий + изображения → Word / Google Docs
+   • Вариант Б (продвинутый): красивое оформление в Canva
+   • Вариант В (экспертный): интерактивный HTML-лист
+
+📌 СВОДНАЯ ТАБЛИЦА
+• Создать задания для рабочего листа → Промт №1 (вкладка «Основной промт») → DeepSeek, Qwen, YandexGPT, GigaChat
+• Главная иллюстрация / персонаж → Промт №2 (вкладка «Иллюстрация») → Qwen, Kandinsky, Шедеврум
+• Декоративные элементы, рамки → Промт №2, раздел «декор»
+• Схема / инфографика → Промт №2, раздел «инфографика»
+• Интерактивный лист с проверкой ответов → Промт №3, вариант 1
+• Интерактивный лист с автоматической оценкой → Промт №3, вариант 2
+• Печатный HTML-лист → Промт №3 + техническое требование «Версия для печати»
+• Перетаскивание, соединение линиями, кликабельные зоны, таймер → механики в Промте №3 (добавляются к любому варианту)
+• Игровой формат (баллы, звёзды, бейджи, сюжет) → блок «Игровые элементы» в Промте №3
+
+⚠️ ПРОВЕРЬТЕ ПЕРЕД ОТПРАВКОЙ
+• Тема: ${d.topic}
+• Предмет: ${d.subject} · Класс: ${d.grade} · Возраст: ${d.age} лет
+• Цель: ${d.goal}
+• Заданий: ${d.count} · Время: ${d.time} мин · Сложность: ${d.diff}
+• Типов заданий выбрано: ${d.types.length}${d.types.length<4 ? ' ⚠ рекомендуется минимум 4' : ' ✓'}
+• Свои задания: ${d.ownOn && d.ownTasks ? 'да' : 'нет'} · Скриншоты: ${files.length ? files.length + ' шт.' : (d.shotOn ? 'будут прикреплены' : 'нет')}
+• Иллюстрация: ${imgOn ? 'включена (' + (d.imgKind==='char'?'персонаж':d.imgKind==='deco'?'декор':'инфографика') + ')' : 'не нужна'}
+• HTML-лист: ${htmlOn ? 'включён (вариант ' + d.htmlVar + ')' : 'не нужен'}
+• Механики: ${mech.length ? mech.join(', ') : 'не выбраны'}
+• Оформление заданий: ${cards.length ? cards.join(' + ') : 'по умолчанию'} · Нумерация: ${d.numStyle} · Поля ответов: ${d.answerStyle}
+• Кнопки: ${btns.length ? btns.join(', ') : 'не выбраны'} · Стиль: ${d.btnStyle} · Расположение: ${d.btnPos}
+• Игровые элементы: ${games.length ? games.join(', ') : 'без игровых элементов'}${d.gameStyle ? ' · Сюжет: ' + d.gameStyle : ''}
+
+💡 СОВЕТ: если ответ нейросети не идеален — напишите «Доработай: сделай задание 3 сложнее, добавь больше места для ответов» вместо генерации заново.`;
+}
+
+/* =========================================================
+   РЕНДЕР
+   ========================================================= */
+function progress(d){
+  let p = 0;
+  if(d.subject && d.subject !== '[предмет]') p += 10;
+  if(d.grade) p += 10;
+  if($('#topic').value.trim()) p += 25;
+  if(d.goal) p += 10;
+  if(d.types.length >= 4) p += 20; else p += d.types.length * 4;
+  if(d.fmtStart.length || d.fmtTask.length) p += 8;
+  if(d.fmtEnd.length) p += 7;
+  if(d.extras.length) p += 5;
+  if(imgOn) p += 2.5;
+  if(htmlOn) p += 2.5;
+  return Math.min(100, Math.round(p));
+}
+const setDone = (id,on)=>{ const e = $(id); if(e) e.classList.toggle('on', !!on); };
+
+function render(){
+  const d = collect();
+  $('#subjectCustom').style.display = ($('#subject').value === 'Другой (вписать)') ? 'block' : 'none';
+  $('#ageOut').value = d.age + ' лет';
+
+  const c = d.types.length;
+  const cnt = $('#typeCount');
+  cnt.textContent = `Выбрано: ${c} ${plural(c,['тип','типа','типов'])}`;
+  cnt.className = 'pill ' + (c >= 4 ? 'ok' : '');
+  $('#typeWarn').style.display = c >= 4 ? 'none' : 'inline-flex';
+
+  $('#htmlDnd').style.display = d.mech.includes('dnd') ? 'block' : 'none';
+  $('#mechCount').textContent = d.mech.length + ' выбрано';
+  $('#btnCount').textContent = d.btnSet.length + ' ' + plural(d.btnSet.length,['кнопка','кнопки','кнопок']);
+  $('#gameCount').textContent = d.game.length + ' ' + plural(d.game.length,['элемент','элемента','элементов']);
+  $('#cardCount').textContent = d.cardStyle.length ? d.cardStyle.length + ' выбрано' : 'по умолчанию';
+
+  setDone('#d1', !!$('#topic').value.trim());
+  setDone('#d2', d.count > 0 && d.time > 0);
+  setDone('#d3', d.types.length >= 4);
+  setDone('#d4', d.fmtStart.length > 0 || d.fmtEnd.length > 0);
+  setDone('#d5', d.extras.length > 0);
+  setDone('#d6', (d.ownOn && !!d.ownTasks) || (d.shotOn));
+  setDone('#d7', imgOn || htmlOn);
+
+  $('#lockImg').style.display = imgOn ? 'none' : 'inline';
+  $('#lockHtml').style.display = htmlOn ? 'none' : 'inline';
+
+  const texts = {main: buildMain(d), img: buildImage(d), html: buildHtml(d), guide: buildGuide(d)};
+  const pre = $('#output');
+  pre.textContent = '';
+  if(activeTab === 'img' && !imgOn){
+    pre.innerHTML = `<div class="off-note"><span class="em">🎨</span><b>Раздел «Иллюстрация» выключен</b>Включите его в шаге 7, чтобы получить промт для персонажа, декоративного элемента или инфографики.<br><button type="button" data-on="img">Включить промт для изображения</button></div>`;
+  } else if(activeTab === 'html' && !htmlOn){
+    pre.innerHTML = `<div class="off-note"><span class="em">💻</span><b>Раздел «Интерактивный HTML-лист» выключен</b>Включите его в шаге 7: вариант листа, механики (drag-and-drop и другие), кнопки, оформление заданий и игровые элементы.<br><button type="button" data-on="html">Включить HTML-промт</button></div>`;
+  } else {
+    pre.textContent = texts[activeTab];
+  }
+  const shown = (activeTab==='img' && !imgOn) || (activeTab==='html' && !htmlOn) ? '' : texts[activeTab];
+  $('#chars').textContent = shown.length + ' ' + plural(shown.length,['символ','символа','символов']);
+
+  const p = progress(d);
+  $('#progFill').style.width = p + '%';
+  $('#progTxt').textContent = p + '%';
+
+  window._promts = texts;
+}
+
+/* =========================================================
+   СОБЫТИЯ
+   ========================================================= */
+document.addEventListener('input', render);
+document.addEventListener('change', e=>{
+  if(e.target.id === 'ownOn') $('#ownBox').style.display = e.target.checked ? 'block' : 'none';
+  if(e.target.id === 'shotOn') $('#shotBox').style.display = e.target.checked ? 'block' : 'none';
+  if(e.target.name === 'imgKind'){
+    const v = radioVal('imgKind');
+    $('#imgChar').style.display = v==='char' ? 'block':'none';
+    $('#imgDeco').style.display = v==='deco' ? 'block':'none';
+    $('#imgInfo').style.display = v==='info' ? 'block':'none';
+  }
+  render();
+});
+
+function toggleAddon(kind){
+  if(kind === 'img'){
+    imgOn = !imgOn;
+    $('#imgCard').classList.toggle('show', imgOn);
+    $('#addonImg').classList.toggle('on', imgOn);
+    $('#addonImg .state').textContent = imgOn ? 'вкл' : 'выкл';
+    if(imgOn) $('#imgCard').scrollIntoView({block:'nearest',behavior:'smooth'});
+  } else {
+    htmlOn = !htmlOn;
+    $('#htmlCard').classList.toggle('show', htmlOn);
+    $('#addonHtml').classList.toggle('on', htmlOn);
+    $('#addonHtml .state').textContent = htmlOn ? 'вкл' : 'выкл';
+    if(htmlOn){
+      if(!$('#htmlTasks').value.trim() && $('#ownTasks').value.trim()) $('#htmlTasks').value = $('#ownTasks').value;
+      $('#htmlCard').scrollIntoView({block:'nearest',behavior:'smooth'});
+    }
+  }
+  render();
+}
+$('#addonImg').addEventListener('click', ()=>toggleAddon('img'));
+$('#addonHtml').addEventListener('click', ()=>toggleAddon('html'));
+$('#output').addEventListener('click', e=>{
+  const on = e.target.dataset.on;
+  if(on === 'img' && !imgOn) toggleAddon('img');
+  if(on === 'html' && !htmlOn) toggleAddon('html');
+});
+
+$('#tabs').addEventListener('click', e=>{
+  const t = e.target.closest('.tab'); if(!t) return;
+  $$('.tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active'); activeTab = t.dataset.tab; render();
+  $('.pv-body').scrollTop = 0;
+});
+
+$('#selAllTypes').addEventListener('click', ()=>{ $$('input[name="type"]').forEach(i=>i.checked=true); render(); });
+$('#clrTypes').addEventListener('click', ()=>{ $$('input[name="type"]').forEach(i=>i.checked=false); render(); });
+$('#btnRecomend').addEventListener('click', ()=>{
+  const g = +radioVal('grade');
+  const pick = g <= 4 ? ['single','insert','match','game','creative']
+             : g <= 7 ? ['single','multi','insert','match','case']
+             : ['multi','insert','match','open','case','work'];
+  $$('input[name="type"]').forEach(i=> i.checked = pick.includes(i.value));
+  render(); toast('🎯 Типы заданий подобраны под ' + g + ' класс');
+});
+$('#btnAllFormat').addEventListener('click', ()=>{
+  ['fmtStart','fmtTask','fmtReq','fmtEnd'].forEach(n=>$$('#'+n+' input').forEach(i=>i.checked=true));
+  render();
+});
+
+/* скриншоты */
+const drop = $('#drop'), fileInput = $('#fileInput');
+drop.addEventListener('click', ()=>fileInput.click());
+drop.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); fileInput.click(); }});
+['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over')}));
+drop.addEventListener('drop', e=>handleFiles(e.dataTransfer.files));
+fileInput.addEventListener('change', ()=>{ handleFiles(fileInput.files); fileInput.value=''; });
+function handleFiles(list){
+  Array.from(list).forEach(f=>{
+    if(!f.type.startsWith('image/') || files.length >= 8) return;
+    const r = new FileReader();
+    r.onload = ev => { files.push({name:f.name, url:ev.target.result}); drawShots(); render(); };
+    r.readAsDataURL(f);
+  });
+  if(!$('#shotOn').checked){ $('#shotOn').checked = true; $('#shotBox').style.display='block'; }
+}
+function drawShots(){
+  $('#shots').innerHTML = files.map((f,i)=>`
+    <div class="shot"><img src="${f.url}" alt="${esc(f.name)}"><button class="rm" type="button" data-i="${i}" title="Удалить" aria-label="Удалить">✕</button><span class="nm">${esc(f.name)}</span></div>`).join('');
+  $('#shotHint').textContent = files.length
+    ? `Прикреплено: ${files.length}. При отправке промта в нейросеть не забудьте приложить эти же файлы к сообщению.`
+    : '';
+}
+$('#shots').addEventListener('click', e=>{
+  const b = e.target.closest('.rm'); if(!b) return;
+  files.splice(+b.dataset.i,1); drawShots(); render();
+});
+
+/* копирование / скачивание */
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove('show'), 2000);
+}
+function copy(text, msg){
+  const done = ()=>toast(msg || '✅ Промт скопирован в буфер обмена');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallback(text,done));
+  } else fallback(text,done);
+}
+function fallback(text, cb){
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); cb(); }catch(err){ toast('⚠ Не удалось скопировать'); }
+  document.body.removeChild(ta);
+}
+$('#btnCopy').addEventListener('click', ()=>{
+  const txt = $('#output').textContent;
+  if(!txt.trim()){ toast('⚠ Нечего копировать'); return; }
+  copy(txt);
+});
+function download(name, text){
+  const blob = new Blob(['\ufeff'+text], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1500);
+  toast('⬇ Файл скачан: ' + name);
+}
+const slug = s => (s||'promt').toLowerCase().replace(/[^a-zа-я0-9]+/gi,'-').replace(/^-|-$/g,'').slice(0,40) || 'promt';
+$('#btnDownload').addEventListener('click', ()=>{
+  const names = {main:'основной-промт', img:'промт-иллюстрация', html:'промт-html-лист', guide:'инструкция'};
+  const txt = $('#output').textContent;
+  if(!txt.trim()){ toast('⚠ Нечего скачивать'); return; }
+  download(`${names[activeTab]}-${slug($('#topic').value)}.txt`, txt);
+});
+$('#btnDownloadAll').addEventListener('click', ()=>{
+  const p = window._promts || {};
+  const all = '════════ ПРОМТ №1. РАБОЧИЙ ЛИСТ ════════\n\n' + (p.main||'') +
+              '\n\n════════ ПРОМТ №2. ИЛЛЮСТРАЦИЯ ════════\n\n' + (p.img||'') +
+              '\n\n════════ ПРОМТ №3. ИНТЕРАКТИВНЫЙ HTML-ЛИСТ ════════\n\n' + (p.html||'') +
+              '\n\n════════ ИНСТРУКЦИЯ ════════\n\n' + (p.guide||'');
+  download(`все-промты-${slug($('#topic').value)}.txt`, all);
+});
+
+function applyDefaults(){
+  Object.keys(DEF).forEach(name=>{
+    $$(`input[name="${name}"]`).forEach(i=> i.checked = !!DEF[name][i.value]);
+  });
+  ['fmtStart','fmtTask','fmtReq','fmtEnd'].forEach(n=>$$('#'+n+' input').forEach(i=>i.checked=true));
+  ['match','insert','open','creative'].forEach(v=>{const e=$(`input[name="type"][value="${v}"]`); if(e) e.checked=true;});
+}
+
+$('#btnExample').addEventListener('click', ()=>{
+  $('#subject').value = 'Русский язык'; $('#subjectCustom').style.display='none';
+  $$('#gradeChips input').forEach(i=>i.checked = (+i.value===3));
+  $('#topic').value = 'Части речи';
+  $$('input[name="goal"]').forEach(i=>i.checked = i.value==='закрепить изученный материал');
+  $('#tasksCount').value = 4; $('#timeMin').value = 15;
+  $$('input[name="diff"]').forEach(i=>i.checked = i.value==='смешанный');
+  $$('input[name="order"]').forEach(i=>i.checked = i.value==='по возрастанию сложности');
+  ['match','insert','open','creative'].forEach(v=>{const e=$(`input[name="type"][value="${v}"]`); if(e) e.checked=true;});
+  render(); toast('✨ Пример заполнен: «Части речи», 3 класс');
+});
+$('#btnReset').addEventListener('click', ()=>{
+  if(!confirm('Очистить все поля конструктора?')) return;
+  $$('input[type=text], textarea').forEach(i=>{ if(i.id!=='reflectQ' && i.id!=='imgMood') i.value=''; });
+  $$('input[type=number]').forEach(i=>{ if(i.id==='tasksCount') i.value=5; if(i.id==='timeMin') i.value=15; });
+  $$('input[type=checkbox]').forEach(i=>i.checked=false);
+  applyDefaults();
+  $('#reflectQ').value='Что было самым сложным? / Что было самым интересным? / Что нового я узнал?';
+  $('#imgMood').value='доброе, весёлое, вдохновляющее';
+  ['numStyle','answerStyle','taskHead','btnStyle','btnColor','btnPos','htmlBg','htmlAccent','htmlIcons'].forEach(id=>{ const e=$('#'+id); if(e) e.selectedIndex=0; });
+  $$('input[name="scale"]')[0].checked = true;
+  $$('input[name="htmlVar"]')[1].checked = true;
+  files.length = 0; drawShots();
+  $('#ownBox').style.display='none'; $('#shotBox').style.display='none';
+  ['img','html'].forEach(k=>{ if((k==='img'?imgOn:htmlOn)) toggleAddon(k); });
+  render(); toast('↺ Конструктор очищен');
+});
+
+/* мобильная панель */
+$('#fab').addEventListener('click', ()=>$('#preview').classList.add('open'));
+$('#pvClose').addEventListener('click', ()=>$('#preview').classList.remove('open'));
+
+/* быстрая навигация: активный шаг */
+const navLinks = $$('.qn');
+const sections = navLinks.map(l => document.getElementById(l.dataset.t)).filter(Boolean);
+if('IntersectionObserver' in window && sections.length){
+  const io = new IntersectionObserver(entries=>{
+    entries.forEach(en=>{
+      if(en.isIntersecting){
+        navLinks.forEach(l=>l.classList.toggle('active', l.dataset.t === en.target.id));
+      }
+    });
+  },{rootMargin:'-45% 0px -50% 0px',threshold:0});
+  sections.forEach(s=>io.observe(s));
+}
+navLinks.forEach(l=>l.addEventListener('click', e=>{
+  const t = document.getElementById(l.dataset.t);
+  if(t){ e.preventDefault(); t.scrollIntoView({behavior:'smooth',block:'start'}); }
+}));
+
+/* старт */
+render();
+</script>
+</body>
+</html>
